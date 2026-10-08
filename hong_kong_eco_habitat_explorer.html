@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hong Kong Eco-Habitat Explorer | 香港生態棲息地探索記</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['"Fredoka One"', 'cursive'],
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            green: '#2e7d32',
+                            lightgreen: '#81c784',
+                            blue: '#0288d1',
+                            lightblue: '#4fc3f7',
+                            yellow: '#fbc02d',
+                            orange: '#f57c00',
+                            wood: '#8d6e63'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Keyframe Animations & Styling */
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-game {
+            font-family: 'Fredoka One', 'Noto Sans TC', cursive;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes wobble {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-12px) rotate(-6deg); }
+            30% { transform: translateX(10px) rotate(5deg); }
+            45% { transform: translateX(-8px) rotate(-3deg); }
+            60% { transform: translateX(6px) rotate(2deg); }
+            75% { transform: translateX(-2px) rotate(-1deg); }
+        }
+
+        @keyframes celebrate-stars {
+            0% { opacity: 1; transform: scale(0.5) translateY(0); }
+            100% { opacity: 0; transform: scale(1.5) translateY(-80px); }
+        }
+
+        .animate-float {
+            animation: float 3.5s ease-in-out infinite;
+        }
+
+        .animate-bounce-gentle {
+            animation: bounce-gentle 1.8s ease-in-out infinite;
+        }
+
+        .animate-wobble {
+            animation: wobble 0.6s ease-in-out;
+        }
+
+        .drop-zone-active {
+            border-color: #fbc02d !important;
+            box-shadow: 0 0 25px rgba(251, 192, 45, 0.8) !important;
+            transform: scale(1.02);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #81c784;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2e7d32;
+        }
+
+        /* Responsive Drag Ghost Element Hide */
+        .dragging-item {
+            opacity: 0.4;
+        }
+
+        /* Touch dragging feedback */
+        .touch-dragging {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            transform: scale(1.1);
+            transition: transform 0.05s ease;
+        }
+    </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden">
+
+    <!-- TOP HEADER & BAR -->
+    <header class="bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 p-2 rounded-2xl backdrop-blur-sm border border-white/30 text-3xl animate-bounce-gentle">
+                    🇭🇰
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black font-game tracking-wide text-yellow-300 drop-shadow-md" id="app-title">
+                        香港生態棲息地探索記
+                    </h1>
+                    <p class="text-xs md:text-sm text-emerald-100 font-medium" id="app-subtitle">
+                        小學常識科 (P1-P3) 生物與自然環境
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats & Language Toggle -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                
+                <!-- Score Counter -->
+                <div class="bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex items-center space-x-2">
+                    <span class="text-xl">⭐</span>
+                    <span class="font-bold text-yellow-300 text-lg font-game" id="star-count">0</span>
+                    <span class="text-xs text-emerald-100 hidden sm:inline" id="score-label">星級得分</span>
+                </div>
+
+                <!-- Badges -->
+                <div class="bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 flex items-center space-x-1" title="發現進度">
+                    <span class="text-lg">🏅</span>
+                    <span class="font-bold text-emerald-200 text-sm font-game" id="badge-count">0/7</span>
+                </div>
+
+                <!-- Language Toggle Button -->
+                <button id="lang-btn" onclick="toggleLanguage()" class="bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-black px-3.5 py-1.5 rounded-full shadow-md transition-all active:scale-95 text-xs sm:text-sm flex items-center space-x-1">
+                    <span>🌐</span>
+                    <span id="lang-text">English</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mode Navigation Tabs -->
+        <div class="max-w-7xl mx-auto px-4 flex space-x-2 border-t border-white/10 pt-2 pb-2">
+            <button onclick="switchTab('game')" id="tab-game" class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold bg-white text-emerald-800 shadow transition-all flex items-center justify-center space-x-2">
+                <span>🏞️</span>
+                <span data-zh="棲息地配對" data-en="Habitat Match">棲息地配對</span>
+            </button>
+            <button onclick="switchTab('encyclopedia')" id="tab-encyclopedia" class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold bg-white/20 hover:bg-white/30 text-white transition-all flex items-center justify-center space-x-2">
+                <span>📖</span>
+                <span data-zh="生態百科圖鑑" data-en="Habitat Encyclopedia">生態百科圖鑑</span>
+            </button>
+            <button onclick="switchTab('quiz')" id="tab-quiz" class="flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold bg-white/20 hover:bg-white/30 text-white transition-all flex items-center justify-center space-x-2">
+                <span>❓</span>
+                <span data-zh="小學常識挑戰賽" data-en="Mini Science Quiz">小學常識挑戰賽</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 flex-grow w-full">
+
+        <!-- ================= PAGE 1: GAME TAB ================= -->
+        <div id="view-game" class="space-y-4">
+            
+            <!-- Instructions Banner -->
+            <div class="bg-emerald-100 border-2 border-emerald-300 rounded-2xl p-3 sm:p-4 flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <span class="text-3xl">💡</span>
+                    <div>
+                        <h2 class="font-bold text-emerald-900 text-sm sm:text-base" id="instruction-title">
+                            幫助小動物尋找家園！
+                        </h2>
+                        <p class="text-xs sm:text-sm text-emerald-800" id="instruction-desc">
+                            從下方動物欄拖拽（或點擊選擇後點擊棲息地）把動物放回牠們正確的香港棲息地吧！
+                        </p>
+                    </div>
+                </div>
+                <button onclick="resetGame()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl text-xs sm:text-sm shadow transition active:scale-95 flex items-center space-x-1 shrink-0">
+                    <span>🔄</span>
+                    <span data-zh="重置" data-en="Reset">重置</span>
+                </button>
+            </div>
+
+            <!-- HABITATS GRID (Target Drop Zones) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Habitat 1: Mai Po Wetlands -->
+                <div id="habitat-maipo" data-habitat="maipo" 
+                     class="habitat-zone relative bg-gradient-to-b from-sky-200 via-teal-100 to-amber-200 border-4 border-dashed border-teal-400 rounded-3xl p-4 min-h-[300px] flex flex-col justify-between transition-all duration-300 shadow-md hover:shadow-xl">
+                    <div class="bg-teal-700/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold w-max shadow flex items-center space-x-1">
+                        <span>🌾</span>
+                        <span data-zh="米埔濕地" data-en="Mai Po Wetlands">米埔濕地</span>
+                    </div>
+                    
+                    <!-- SVG Background Illustration for Mai Po -->
+                    <div class="absolute inset-0 pointer-events-none opacity-25 overflow-hidden rounded-3xl flex items-end">
+                        <svg class="w-full h-48" viewBox="0 0 300 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 120 C50 100 100 130 150 110 C200 90 250 120 300 100 L300 150 L0 150 Z" fill="#0d9488"/>
+                            <circle cx="60" cy="50" r="15" fill="#fef08a"/>
+                            <path d="M20 110 Q 25 70 30 110 Q 35 60 40 110" stroke="#115e59" stroke-width="4"/>
+                            <path d="M260 110 Q 265 70 270 110 Q 275 60 280 110" stroke="#115e59" stroke-width="4"/>
+                        </svg>
+                    </div>
+
+                    <!-- Placed Animals Container -->
+                    <div class="placed-animals min-h-[180px] grid grid-cols-2 gap-2 my-2 relative z-10">
+                        <!-- Placed items will appear here -->
+                    </div>
+
+                    <div class="text-center text-xs font-bold text-teal-800 bg-white/60 py-1 px-2 rounded-xl backdrop-blur-sm border border-teal-200/50">
+                        <span data-zh="紅樹林、泥灘及基圍" data-en="Mangroves, Mudflats & Gei Wais">紅樹林、泥灘及基圍</span>
+                    </div>
+                </div>
+
+                <!-- Habitat 2: Victoria Peak Forest -->
+                <div id="habitat-peak" data-habitat="peak" 
+                     class="habitat-zone relative bg-gradient-to-b from-sky-200 via-emerald-100 to-green-300 border-4 border-dashed border-emerald-500 rounded-3xl p-4 min-h-[300px] flex flex-col justify-between transition-all duration-300 shadow-md hover:shadow-xl">
+                    <div class="bg-emerald-800/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold w-max shadow flex items-center space-x-1">
+                        <span>⛰️</span>
+                        <span data-zh="太平山森林" data-en="Victoria Peak Forest">太平山森林</span>
+                    </div>
+
+                    <!-- SVG Background Illustration for Peak Forest -->
+                    <div class="absolute inset-0 pointer-events-none opacity-25 overflow-hidden rounded-3xl flex items-end">
+                        <svg class="w-full h-48" viewBox="0 0 300 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 150 L80 40 L160 150 L220 70 L300 150 Z" fill="#15803d"/>
+                            <path d="M40 150 L100 80 L160 150 Z" fill="#166534"/>
+                        </svg>
+                    </div>
+
+                    <!-- Placed Animals Container -->
+                    <div class="placed-animals min-h-[180px] grid grid-cols-2 gap-2 my-2 relative z-10">
+                        <!-- Placed items will appear here -->
+                    </div>
+
+                    <div class="text-center text-xs font-bold text-emerald-900 bg-white/60 py-1 px-2 rounded-xl backdrop-blur-sm border border-emerald-200/50">
+                        <span data-zh="亞熱帶常綠樹林與山溪" data-en="Subtropical Evergreen Forest & Streams">亞熱帶常綠樹林與山溪</span>
+                    </div>
+                </div>
+
+                <!-- Habitat 3: Sai Kung Coral Reef -->
+                <div id="habitat-saikung" data-habitat="saikung" 
+                     class="habitat-zone relative bg-gradient-to-b from-sky-300 via-cyan-200 to-blue-400 border-4 border-dashed border-blue-500 rounded-3xl p-4 min-h-[300px] flex flex-col justify-between transition-all duration-300 shadow-md hover:shadow-xl">
+                    <div class="bg-blue-800/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold w-max shadow flex items-center space-x-1">
+                        <span>🪸</span>
+                        <span data-zh="西貢珊瑚礁" data-en="Sai Kung Coral Reef">西貢珊瑚礁</span>
+                    </div>
+
+                    <!-- SVG Background Illustration for Sai Kung Reef -->
+                    <div class="absolute inset-0 pointer-events-none opacity-30 overflow-hidden rounded-3xl flex items-end">
+                        <svg class="w-full h-48" viewBox="0 0 300 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 130 Q 30 110 60 150 Q 90 100 120 150 Q 150 90 180 150 Q 220 110 260 150 L 300 130 L 300 150 L 0 150 Z" fill="#0288d1"/>
+                            <path d="M30 150 Q 40 100 50 150 M100 150 Q 110 90 120 150 M230 150 Q 240 100 250 150" stroke="#f43f5e" stroke-width="8" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+
+                    <!-- Placed Animals Container -->
+                    <div class="placed-animals min-h-[180px] grid grid-cols-2 gap-2 my-2 relative z-10">
+                        <!-- Placed items will appear here -->
+                    </div>
+
+                    <div class="text-center text-xs font-bold text-blue-900 bg-white/60 py-1 px-2 rounded-xl backdrop-blur-sm border border-blue-200/50">
+                        <span data-zh="清澈海洋、石珊瑚與海草" data-en="Clear Ocean, Hard Corals & Seagrass">清澈海洋、石珊瑚與海草</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ANIMAL POOL SIDEBAR / BOTTOM BAR -->
+            <div class="bg-white rounded-3xl p-4 shadow-lg border-2 border-amber-200">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-black text-amber-900 text-sm sm:text-base flex items-center space-x-2">
+                        <span>🐾</span>
+                        <span data-zh="待探索的香港野生動物 (點擊或拖拖看！)" data-en="Hong Kong Wildlife Pool (Drag or Tap!)">待探索的香港野生動物 (點擊或拖拖看！)</span>
+                    </h3>
+                    <span id="remaining-count" class="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full">
+                        7 只待安置
+                    </span>
+                </div>
+
+                <div id="animal-pool" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 min-h-[100px] p-2 bg-amber-50/50 rounded-2xl border border-amber-200/60">
+                    <!-- Dynamic animal items inserted via JS -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PAGE 2: ENCYCLOPEDIA TAB ================= -->
+        <div id="view-encyclopedia" class="hidden space-y-4">
+            <div class="bg-amber-100/80 border border-amber-300 rounded-2xl p-4 text-center">
+                <h2 class="text-xl font-black text-amber-900 font-game" data-zh="香港野生生物小百科" data-en="Hong Kong Wildlife Encyclopedia">
+                    香港野生生物小百科
+                </h2>
+                <p class="text-xs sm:text-sm text-amber-800 mt-1" data-zh="完成棲息地配對，即可解鎖動物的飲食習性與保育資訊喔！" data-en="Complete habitat matches to unlock animal diet and conservation cards!">
+                    完成棲息地配對，即可解鎖動物的飲食習性與保育資訊喔！
+                </p>
+            </div>
+
+            <div id="encyclopedia-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamic cards populated via JS -->
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: QUIZ TAB ================= -->
+        <div id="view-quiz" class="hidden space-y-4">
+            <div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 shadow-xl border-4 border-amber-300 text-center">
+                
+                <div id="quiz-intro">
+                    <div class="text-5xl my-3">🧩</div>
+                    <h2 class="text-2xl font-black text-emerald-800 font-game mb-2" data-zh="小學常識科：棲息地大考驗" data-en="Primary Science: Habitat Challenge">
+                        小學常識科：棲息地大考驗
+                    </h2>
+                    <p class="text-slate-600 text-sm mb-6" data-zh="測試你對香港生物及其生存需要的了解！準備好了嗎？" data-en="Test your knowledge on Hong Kong wildlife and their survival needs!">
+                        測試你對香港生物及其生存需要的了解！準備好了嗎？
+                    </p>
+                    <button onclick="startQuiz()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black px-8 py-3 rounded-2xl text-lg shadow-lg hover:shadow-xl transition-all active:scale-95">
+                        <span data-zh="開始答題 🚀" data-en="Start Quiz 🚀">開始答題 🚀</span>
+                    </button>
+                </div>
+
+                <div id="quiz-body" class="hidden text-left space-y-4">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-500 border-b pb-2">
+                        <span id="quiz-progress-text">問題 1 / 3</span>
+                        <span id="quiz-score-display" class="text-emerald-600">分數: 0</span>
+                    </div>
+
+                    <h3 id="quiz-question" class="text-base sm:text-lg font-black text-slate-800 leading-snug">
+                        <!-- Dynamic question text -->
+                    </h3>
+
+                    <div id="quiz-options" class="space-y-2.5">
+                        <!-- Dynamic options buttons -->
+                    </div>
+
+                    <div id="quiz-feedback" class="hidden p-3 rounded-2xl text-sm font-bold text-center">
+                        <!-- Feedback box -->
+                    </div>
+                </div>
+
+                <div id="quiz-summary" class="hidden space-y-4">
+                    <div class="text-6xl animate-bounce-gentle">🏆</div>
+                    <h3 class="text-2xl font-black text-amber-600 font-game" data-zh="太棒了！挑戰完成！" data-en="Awesome! Quiz Completed!">
+                        太棒了！挑戰完成！
+                    </h3>
+                    <p id="quiz-final-score" class="text-lg font-bold text-slate-700">
+                        <!-- Final score text -->
+                    </p>
+                    <button onclick="startQuiz()" class="bg-amber-500 hover:bg-amber-600 text-white font-black px-6 py-2.5 rounded-2xl shadow transition">
+                        <span data-zh="再玩一次" data-en="Play Again">再玩一次</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ANIMAL FACT / CELEBRATION MODAL POPUP -->
+    <div id="fact-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-yellow-400 relative text-center transform transition-all animate-bounce-gentle">
+            
+            <button onclick="closeModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 bg-slate-100 hover:bg-slate-200 rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                ✕
+            </button>
+
+            <div class="text-6xl mb-2" id="modal-animal-icon">🦅</div>
+            <h3 class="text-xl font-black text-emerald-800 font-game" id="modal-animal-name">黑臉琵鷺</h3>
+            <span class="inline-block bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full my-2" id="modal-animal-habitat">
+                米埔濕地
+            </span>
+
+            <p class="text-slate-700 text-sm leading-relaxed my-4 text-left bg-emerald-50 p-3 rounded-2xl border border-emerald-200" id="modal-animal-fact">
+                黑臉琵鷺每年冬天都會來到米埔！牠用匙狀的嘴巴在淺水泥灘中搜尋小魚。
+            </p>
+
+            <div class="flex justify-center space-x-3">
+                <button onclick="speakCurrentFact()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm shadow flex items-center space-x-1">
+                    <span>🔊</span>
+                    <span data-zh="語音朗讀" data-en="Read Aloud">語音朗讀</span>
+                </button>
+                <button onclick="closeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-xl text-xs sm:text-sm shadow">
+                    <span data-zh="知道啦！" data-en="Got it!">知道啦！</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WRONG DROP SPEECH TOOLTIP -->
+    <div id="hint-tooltip" class="fixed z-50 bg-rose-500 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-2xl shadow-xl pointer-events-none transition-all duration-300 opacity-0 transform -translate-y-2 max-w-xs text-center border-2 border-white">
+        <!-- Dynamic hint message -->
+    </div>
+
+    <!-- FOOTER & GITHUB PAGES HELP BUTTON -->
+    <footer class="bg-slate-800 text-slate-300 py-4 px-4 text-xs text-center mt-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+                <p class="font-bold text-slate-200" data-zh="香港小學常識科 (P1-P3) 教學輔助軟件" data-en="HK Primary General Studies Interactive Teaching Tool">
+                    香港小學常識科 (P1-P3) 教學輔助軟件
+                </p>
+                <p class="text-slate-400 text-[11px]" data-zh="符合香港課程指引：認識香港自然環境與野生生物" data-en="Aligned with HK Curriculum: Learning Local Environments & Biodiversity">
+                    符合香港課程指引：認識香港自然環境與野生生物
+                </p>
+            </div>
+
+            <!-- GitHub Deploy Modal Trigger -->
+            <button onclick="toggleGithubGuide()" class="bg-slate-700 hover:bg-slate-600 text-yellow-300 font-bold px-3.5 py-1.5 rounded-xl border border-slate-500 flex items-center space-x-1 transition">
+                <span>🚀</span>
+                <span data-zh="如何免費部署到 GitHub Pages？" data-en="How to host on GitHub Pages?">如何免費部署到 GitHub Pages？</span>
+            </button>
+        </div>
+    </footer>
+
+    <!-- GITHUB DEPLOYMENT INSTRUCTIONS MODAL -->
+    <div id="github-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-2 border-slate-300 relative text-left text-slate-800">
+            <button onclick="toggleGithubGuide()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+            <h3 class="text-lg font-black text-slate-900 mb-3 flex items-center space-x-2">
+                <span>📦</span>
+                <span>Deploy to GitHub Pages (2 Minutes)</span>
+            </h3>
+            <ol class="list-decimal list-inside space-y-2 text-xs sm:text-sm text-slate-700">
+                <li>Create a new public GitHub repository named <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700 font-mono">hk-eco-explorer</code>.</li>
+                <li>Upload this single <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700 font-mono">index.html</code> file directly into the repository root.</li>
+                <li>Go to repository <strong>Settings</strong> ➔ <strong>Pages</strong> tab.</li>
+                <li>Under <strong>Build and deployment</strong>, select Branch: <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700 font-mono">main</code> / <code class="bg-slate-100 px-1 py-0.5 rounded text-emerald-700 font-mono">root</code> and click <strong>Save</strong>.</li>
+                <li>Your site will be live instantly at <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-sky-600">https://yourusername.github.io/hk-eco-explorer/</code>!</li>
+            </ol>
+            <div class="mt-4 text-right">
+                <button onclick="toggleGithubGuide()" class="bg-slate-800 text-white font-bold px-4 py-1.5 rounded-xl text-xs">Close</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
+    <script>
+        // --- 1. GAME DATA & ANIMAL SPECIES CATALOG ---
+        const animalsData = [
+            {
+                id: 'spoonbill',
+                icon: '🦩',
+                nameZh: '黑臉琵鷺',
+                nameEn: 'Black-faced Spoonbill',
+                targetHabitat: 'maipo',
+                dietZh: '肉食性 (小鱼、匙蝦)',
+                dietEn: 'Carnivore (Small fish, shrimps)',
+                statusZh: '瀕危 (冬候鳥)',
+                statusEn: 'Endangered (Winter Visitor)',
+                factZh: '黑臉琵鷺每年冬天都會來到米埔濕地！牠用匙狀的嘴巴在淺水泥灘中來回掃動搜尋小魚。',
+                factEn: 'The Black-faced Spoonbill visits Mai Po every winter! It uses its spoon-shaped beak to sweep through shallow mudflats for fish.',
+                hintWrongZh: '這裏沒有泥灘小魚，我不習慣住在高山或深海喔！',
+                hintWrongEn: 'I need shallow mudflats and fish, not mountains or ocean reefs!'
+            },
+            {
+                id: 'mudskipper',
+                icon: '🐟',
+                nameZh: '彈塗魚',
+                nameEn: 'Mudskipper',
+                targetHabitat: 'maipo',
+                dietZh: '雜食性 (昆蟲、藻類)',
+                dietEn: 'Omnivore (Insects, algae)',
+                statusZh: '無危 (紅樹林常客)',
+                statusEn: 'Least Concern (Mangrove native)',
+                factZh: '彈塗魚是能在陸地上呼吸的奇特魚類！牠們靠濕潤的皮膚呼吸，並在米埔泥灘上跳躍。',
+                factEn: 'Mudskippers can breathe on land using their moist skin! They love skipping around Mai Po mudflats.',
+                hintWrongZh: '我需要濕潤的紅樹林泥灘，太乾燥的山林或太深的海洋都不適合我！',
+                hintWrongEn: 'I need muddy mangroves to keep my skin moist, not high trees or deep ocean!'
+            },
+            {
+                id: 'barking-deer',
+                icon: '🦌',
+                nameZh: '赤麂 (Barking Deer)',
+                nameEn: 'Barking Deer',
+                targetHabitat: 'peak',
+                dietZh: '草食性 (樹葉、果實)',
+                dietEn: 'Herbivore (Leaves, fruits)',
+                statusZh: '受保護野生動物',
+                statusEn: 'Protected Native Species',
+                factZh: '赤麂住在太平山等茂密森林中。當牠們感到驚慌時，會發出像狗吠一樣的聲音！',
+                factEn: 'Barking Deer live in dense forests like Victoria Peak. When scared, they make a barking sound like a dog!',
+                hintWrongZh: '我是陸地鹿類，沒法在鹹水海洋或海水泥灘中生活喔！',
+                hintWrongEn: 'I live on dry forest ground! I cannot swim in ocean reefs or mudflats.'
+            },
+            {
+                id: 'black-kite',
+                icon: '🦅',
+                nameZh: '黑晃 (麻鷹)',
+                nameEn: 'Black Kite',
+                targetHabitat: 'peak',
+                dietZh: '肉食性 (小動物、魚類)',
+                dietEn: 'Carnivore (Small animals, fish)',
+                statusZh: '常見留鳥/候鳥',
+                statusEn: 'Common Resident/Migrant',
+                factZh: '黑晃是香港港灣與山頂天空最常見的猛禽！牠們利用太平山上升的熱氣流在高空盤旋。',
+                factEn: 'Black Kites are birds of prey soaring over Victoria Peak! They use thermal air currents to glide effortlessly.',
+                hintWrongZh: '我需要高山樹木棲息築巢，海水底下可沒法飛翔呢！',
+                hintWrongEn: 'I need tall trees and mountain skies to build nests, not underwater reefs!'
+            },
+            {
+                id: 'clownfish',
+                icon: '🐠',
+                nameZh: '小丑魚',
+                nameEn: 'Clownfish',
+                targetHabitat: 'saikung',
+                dietZh: '雜食性 (浮游生物)',
+                dietEn: 'Omnivore (Plankton, algae)',
+                statusZh: '珊瑚礁共生生物',
+                statusEn: 'Coral Reef Symbiont',
+                factZh: '小丑魚住在西貢珊瑚礁的海葵毒觸手之中，牠們不怕海葵毒刺，反而互相保護！',
+                factEn: 'Clownfish live safely among sea anemones in Sai Kung reefs! They protect each other in clear warm ocean water.',
+                hintWrongZh: '離開海水中我會無法呼吸！我不能住在陸地森林或乾涸泥灘上。',
+                hintWrongEn: 'I need salt water ocean to breathe! I cannot survive on dry land or mudflats.'
+            },
+            {
+                id: 'green-turtle',
+                icon: '🐢',
+                nameZh: '綠海龜',
+                nameEn: 'Green Sea Turtle',
+                targetHabitat: 'saikung',
+                dietZh: '草食性/雜食性 (海草)',
+                dietEn: 'Herbivore/Omnivore (Seagrass)',
+                statusZh: '瀕危 (受保護生物)',
+                statusEn: 'Endangered (Protected)',
+                factZh: '綠海龜會在西貢及南丫島清澈海域游泳，並以水下的海草及珊瑚礁藻類為食！',
+                factEn: 'Green Sea Turtles swim through Sai Kung\'s clear waters, munching on lush seagrass and reef algae!',
+                hintWrongZh: '我需要在清澈海洋中暢遊食海草，沒法在高山樹頂棲息呢！',
+                hintWrongEn: 'I need deep ocean water to swim and eat seagrass, not forest trees!'
+            },
+            {
+                id: 'hk-newt',
+                icon: '🦎',
+                nameZh: '香港蠑螈',
+                nameEn: 'Hong Kong Newt',
+                targetHabitat: 'peak',
+                dietZh: '肉食性 (水生昆蟲)',
+                dietEn: 'Carnivore (Aquatic insects)',
+                statusZh: '特有亞種 / 易危',
+                statusEn: 'Endemic Subspecies / Vulnerable',
+                factZh: '香港蠑螈是香港特有兩棲類！牠們喜歡太平山清涼澈底的山溪與樹林下落葉層。',
+                factEn: 'The Hong Kong Newt is a unique native amphibian! It loves cool freshwater streams and forest leaf litter in Peak forests.',
+                hintWrongZh: '鹹鹹的大海會讓我脫水！我需要太平山清涼的淡水山溪。',
+                hintWrongEn: 'Salty ocean water will dehydrate me! I need cool mountain freshwater streams.'
+            }
+        ];
+
+        // --- 2. QUIZ DATA ---
+        const quizQuestions = [
+            {
+                qZh: '黑臉琵鷺為什麼喜歡來到米埔濕地度過冬天？',
+                qEn: 'Why do Black-faced Spoonbills visit Mai Po Wetlands in winter?',
+                optionsZh: [
+                    '米埔有廣闊的泥灘和淺水池，方便用匙狀嘴巴抓小魚',
+                    '米埔有許多高山樹木可以築巢',
+                    '米埔的海水特別深，適合潛水'
+                ],
+                optionsEn: [
+                    'Mai Po has wide mudflats and shallow pools rich in small fish',
+                    'Mai Po has high mountain trees for nesting',
+                    'Mai Po has deep ocean water for diving'
+                ],
+                correct: 0,
+                explainZh: '答對了！米埔的淺水泥灘提供了豐富的小魚小蝦作為食物。',
+                explainEn: 'Correct! Mai Po\'s shallow mudflats provide abundant fish and shrimp.'
+            },
+            {
+                qZh: '小丑魚和綠海龜可以在哪裏找到適合牠們的家園？',
+                qEn: 'Where can Clownfish and Green Sea Turtles find a suitable home?',
+                optionsZh: [
+                    '太平山頂的乾燥樹林',
+                    '西貢清澈的鹹水珊瑚礁與海草床',
+                    '米埔的淡水池塘泥土中'
+                ],
+                optionsEn: [
+                    'Dry forests on Victoria Peak',
+                    'Clear ocean coral reefs and seagrass beds in Sai Kung',
+                    'Freshwater pond mud in Mai Po'
+                ],
+                correct: 1,
+                explainZh: '完全正確！牠們是海洋生物，需要鹹水海洋和珊瑚礁。',
+                explainEn: 'Spot on! They are marine species requiring salty ocean water and corals.'
+            },
+            {
+                qZh: '如果森林中的樹木被大量砍伐，赤麂和香港蠑螈會面對什麼問題？',
+                qEn: 'What happens to Barking Deer and HK Newts if forest trees are cut down?',
+                optionsZh: [
+                    '牠們會變得更高大',
+                    '牠們會失去食物、藏身庇護所及清涼的山溪',
+                    '牠們會立刻學會在海裏游泳'
+                ],
+                optionsEn: [
+                    'They will grow taller',
+                    'They lose their food, shelter, and cool freshwater streams',
+                    'They instantly learn to swim in the ocean'
+                ],
+                correct: 1,
+                explainZh: '非常正確！保護棲息地就是保護野生動物的生存需求。',
+                explainEn: 'Correct! Protecting habitats safeguards animal survival needs.'
+            }
+        ];
+
+        // --- 3. STATE MANAGEMENT ---
+        let currentLang = 'zh'; // 'zh' or 'en'
+        let starScore = 0;
+        let placedAnimalsMap = {}; // animalId -> habitatId
+        let activeSelectedAnimalId = null; // For tap-to-place mobile mode
+        let currentFactAnimal = null;
+        let quizIndex = 0;
+        let quizScore = 0;
+
+        // --- 4. AUDIO SYNTHESIS & SOUND EFFECTS (Web Audio API) ---
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'success') {
+                    // Happy chime (C5 -> E5 -> G5)
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1);
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    // Low wobble (B3 -> F3)
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(246.94, now);
+                    osc.frequency.linearRampToValueAtTime(174.61, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.log('Audio playback unavailable');
+            }
+        }
+
+        // Speech Synthesis for Facts
+        function speakText(text, langCode) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop any ongoing speech
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = langCode === 'zh' ? 'zh-HK' : 'en-US';
+                utterance.rate = 0.9; // Slightly slower for primary kids
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // --- 5. INITIALIZATION & DOM RENDERING ---
+        window.onload = function() {
+            renderAnimalPool();
+            renderEncyclopedia();
+            setupDragAndDrop();
+            updateLanguageUI();
+        };
+
+        // Render animal sidebar pool
+        function renderAnimalPool() {
+            const pool = document.getElementById('animal-pool');
+            pool.innerHTML = '';
+
+            let unplacedCount = 0;
+
+            animalsData.forEach(animal => {
+                const isPlaced = !!placedAnimalsMap[animal.id];
+                if (!isPlaced) unplacedCount++;
+
+                const card = document.createElement('div');
+                card.id = `animal-card-${animal.id}`;
+                card.draggable = !isPlaced;
+                card.className = `animal-item p-2.5 bg-white rounded-2xl border-2 transition-all cursor-grab flex flex-col items-center justify-center text-center shadow-sm select-none
+                    ${isPlaced ? 'opacity-30 border-gray-200 cursor-not-allowed hidden' : 'border-amber-300 hover:border-amber-500 hover:shadow-md active:scale-95'}
+                    ${activeSelectedAnimalId === animal.id ? 'ring-4 ring-yellow-400 bg-yellow-50' : ''}`;
+
+                card.setAttribute('data-id', animal.id);
+
+                card.innerHTML = `
+                    <div class="text-3xl sm:text-4xl pointer-events-none">${animal.icon}</div>
+                    <span class="text-xs font-bold text-amber-950 mt-1 pointer-events-none">
+                        ${currentLang === 'zh' ? animal.nameZh : animal.nameEn}
+                    </span>
+                `;
+
+                // Click event for Mobile Tap-to-Place
+                card.addEventListener('click', () => handleAnimalClick(animal.id));
+
+                // HTML5 Drag Events
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                pool.appendChild(card);
+            });
+
+            document.getElementById('remaining-count').innerText = `${unplacedCount} ${currentLang === 'zh' ? '只待安置' : 'remaining'}`;
+        }
+
+        // Render Placed Animals into Habitat Zones
+        function renderPlacedAnimals() {
+            const habitats = ['maipo', 'peak', 'saikung'];
+            
+            habitats.forEach(habId => {
+                const container = document.querySelector(`#habitat-${habId} .placed-animals`);
+                container.innerHTML = '';
+
+                Object.keys(placedAnimalsMap).forEach(animalId => {
+                    if (placedAnimalsMap[animalId] === habId) {
+                        const animal = animalsData.find(a => a.id === animalId);
+                        
+                        const badge = document.createElement('div');
+                        badge.className = 'bg-white/90 backdrop-blur-sm p-2 rounded-2xl border border-emerald-300 shadow flex items-center space-x-2 animate-bounce-gentle cursor-pointer hover:bg-yellow-50';
+                        badge.onclick = () => showFactModal(animal);
+                        badge.innerHTML = `
+                            <span class="text-2xl">${animal.icon}</span>
+                            <div class="text-left overflow-hidden">
+                                <div class="text-xs font-bold text-slate-800 truncate">${currentLang === 'zh' ? animal.nameZh : animal.nameEn}</div>
+                                <div class="text-[10px] text-emerald-600 font-bold">✓ ${currentLang === 'zh' ? '已適應' : 'Adapted'}</div>
+                            </div>
+                        `;
+                        container.appendChild(badge);
+                    }
+                });
+            });
+        }
+
+        // --- 6. DRAG & DROP AND TAP LOGIC ---
+        let draggedAnimalId = null;
+
+        function handleDragStart(e) {
+            draggedAnimalId = e.currentTarget.getAttribute('data-id');
+            e.currentTarget.classList.add('dragging-item');
+            e.dataTransfer.setData('text/plain', draggedAnimalId);
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging-item');
+        }
+
+        function setupDragAndDrop() {
+            const zones = document.querySelectorAll('.habitat-zone');
+            
+            zones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    zone.classList.add('drop-zone-active');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('drop-zone-active');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('drop-zone-active');
+                    const animalId = e.dataTransfer.getData('text/plain') || draggedAnimalId;
+                    const targetHabitat = zone.getAttribute('data-habitat');
+                    
+                    if (animalId && targetHabitat) {
+                        attemptPlaceAnimal(animalId, targetHabitat, zone);
+                    }
+                });
+
+                // Tap-to-place destination click
+                zone.addEventListener('click', (e) => {
+                    if (activeSelectedAnimalId) {
+                        const targetHabitat = zone.getAttribute('data-habitat');
+                        attemptPlaceAnimal(activeSelectedAnimalId, targetHabitat, zone);
+                    }
+                });
+            });
+        }
+
+        function handleAnimalClick(animalId) {
+            if (activeSelectedAnimalId === animalId) {
+                activeSelectedAnimalId = null; // deselect
+            } else {
+                activeSelectedAnimalId = animalId;
+            }
+            renderAnimalPool();
+        }
+
+        // CORE VERIFICATION LOGIC
+        function attemptPlaceAnimal(animalId, targetHabitat, zoneElement) {
+            const animal = animalsData.find(a => a.id === animalId);
+            if (!animal) return;
+
+            if (animal.targetHabitat === targetHabitat) {
+                // SUCCESS MATCH!
+                placedAnimalsMap[animalId] = targetHabitat;
+                starScore += 10;
+                activeSelectedAnimalId = null;
+
+                playSound('success');
+                updateScoreUI();
+                renderAnimalPool();
+                renderPlacedAnimals();
+                renderEncyclopedia();
+                showFactModal(animal);
+
+            } else {
+                // INCORRECT MATCH!
+                playSound('wrong');
+                zoneElement.classList.add('animate-wobble');
+                setTimeout(() => zoneElement.classList.remove('animate-wobble'), 600);
+
+                showHintTooltip(animal, zoneElement);
+            }
+        }
+
+        // Show tooltip visual hint for wrong placement
+        function showHintTooltip(animal, zoneElement) {
+            const tooltip = document.getElementById('hint-tooltip');
+            const hintMsg = currentLang === 'zh' ? animal.hintWrongZh : animal.hintWrongEn;
+            
+            const rect = zoneElement.getBoundingClientRect();
+            
+            tooltip.innerHTML = `💬 <strong>${currentLang === 'zh' ? animal.nameZh : animal.nameEn}:</strong> ${hintMsg}`;
+            tooltip.style.left = `${Math.max(10, rect.left + rect.width / 2 - 140)}px`;
+            tooltip.style.top = `${rect.top + 20}px`;
+            
+            tooltip.classList.remove('opacity-0', '-translate-y-2');
+            tooltip.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                tooltip.classList.remove('opacity-100', 'translate-y-0');
+                tooltip.classList.add('opacity-0', '-translate-y-2');
+            }, 3500);
+        }
+
+        // Show Modal Fact Dialog
+        function showFactModal(animal) {
+            currentFactAnimal = animal;
+            document.getElementById('modal-animal-icon').innerText = animal.icon;
+            document.getElementById('modal-animal-name').innerText = currentLang === 'zh' ? animal.nameZh : animal.nameEn;
+            
+            const habitatNames = {
+                maipo: currentLang === 'zh' ? '🌾 米埔濕地' : '🌾 Mai Po Wetlands',
+                peak: currentLang === 'zh' ? '⛰️ 太平山森林' : '⛰️ Victoria Peak Forest',
+                saikung: currentLang === 'zh' ? '🪸 西貢珊瑚礁' : '🪸 Sai Kung Coral Reef'
+            };
+            document.getElementById('modal-animal-habitat').innerText = habitatNames[animal.targetHabitat];
+            document.getElementById('modal-animal-fact').innerText = currentLang === 'zh' ? animal.factZh : animal.factEn;
+
+            document.getElementById('fact-modal').classList.remove('hidden');
+
+            // Speak audio fact automatically
+            speakCurrentFact();
+        }
+
+        function speakCurrentFact() {
+            if (currentFactAnimal) {
+                const text = currentLang === 'zh' ? currentFactAnimal.factZh : currentFactAnimal.factEn;
+                speakText(text, currentLang);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('fact-modal').classList.add('hidden');
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        // --- 7. ENCYCLOPEDIA TAB LOGIC ---
+        function renderEncyclopedia() {
+            const grid = document.getElementById('encyclopedia-grid');
+            grid.innerHTML = '';
+
+            animalsData.forEach(animal => {
+                const isUnlocked = !!placedAnimalsMap[animal.id];
+                
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-3xl border-2 transition-all ${isUnlocked ? 'bg-white border-emerald-300 shadow-md' : 'bg-slate-100 border-slate-300 opacity-60'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-4 mb-3">
+                        <div class="text-5xl bg-amber-100 p-2 rounded-2xl border border-amber-200">${isUnlocked ? animal.icon : '❓'}</div>
+                        <div>
+                            <h3 class="font-black text-slate-800 text-base">
+                                ${isUnlocked ? (currentLang === 'zh' ? animal.nameZh : animal.nameEn) : (currentLang === 'zh' ? '未解鎖生物' : 'Locked Species')}
+                            </h3>
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full ${isUnlocked ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                                ${isUnlocked ? (currentLang === 'zh' ? '已完成配對' : 'Unlocked') : (currentLang === 'zh' ? '請先完成棲息地配對' : 'Locked')}
+                            </span>
+                        </div>
+                    </div>
+                    ${isUnlocked ? `
+                        <div class="space-y-1.5 text-xs text-slate-700 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                            <div><strong>${currentLang === 'zh' ? '飲食習性:' : 'Diet:'}</strong> ${currentLang === 'zh' ? animal.dietZh : animal.dietEn}</div>
+                            <div><strong>${currentLang === 'zh' ? '保護狀況:' : 'Status:'}</strong> ${currentLang === 'zh' ? animal.statusZh : animal.statusEn}</div>
+                            <p class="mt-2 text-slate-600 leading-snug border-t pt-2">${currentLang === 'zh' ? animal.factZh : animal.factEn}</p>
+                        </div>
+                    ` : `
+                        <p class="text-xs text-slate-500 italic text-center py-4">
+                            ${currentLang === 'zh' ? '回到「棲息地配對」把這隻動物放回正確的家即可解鎖！' : 'Return to "Habitat Match" and drag this animal to its home to unlock!'}
+                        </p>
+                    `}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- 8. MINI SCIENCE QUIZ LOGIC ---
+        function startQuiz() {
+            quizIndex = 0;
+            quizScore = 0;
+            document.getElementById('quiz-intro').classList.add('hidden');
+            document.getElementById('quiz-summary').classList.add('hidden');
+            document.getElementById('quiz-body').classList.remove('hidden');
+            renderQuizQuestion();
+        }
+
+        function renderQuizQuestion() {
+            const q = quizQuestions[quizIndex];
+            document.getElementById('quiz-progress-text').innerText = `${currentLang === 'zh' ? '問題' : 'Question'} ${quizIndex + 1} / ${quizQuestions.length}`;
+            document.getElementById('quiz-score-display').innerText = `${currentLang === 'zh' ? '分數' : 'Score'}: ${quizScore}`;
+            document.getElementById('quiz-question').innerText = currentLang === 'zh' ? q.qZh : q.qEn;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            const options = currentLang === 'zh' ? q.optionsZh : q.optionsEn;
+
+            options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-3.5 rounded-2xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 font-bold text-xs sm:text-sm text-slate-800 transition active:scale-98 flex items-center space-x-3';
+                btn.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-xs shrink-0">${String.fromCharCode(65 + idx)}</span>
+                    <span>${optText}</span>
+                `;
+                btn.onclick = () => checkQuizAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+        }
+
+        function checkQuizAnswer(selectedIdx) {
+            const q = quizQuestions[quizIndex];
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === q.correct) {
+                quizScore += 10;
+                starScore += 5;
+                updateScoreUI();
+                playSound('success');
+                feedback.className = 'p-3 rounded-2xl text-xs sm:text-sm font-bold text-center bg-emerald-100 text-emerald-900 border border-emerald-300';
+                feedback.innerText = `✓ ${currentLang === 'zh' ? q.explainZh : q.explainEn}`;
+            } else {
+                playSound('wrong');
+                feedback.className = 'p-3 rounded-2xl text-xs sm:text-sm font-bold text-center bg-rose-100 text-rose-900 border border-rose-300';
+                feedback.innerText = `✕ ${currentLang === 'zh' ? '再想一想喔！提示：觀察生物的食物與生活習慣。' : 'Try again! Hint: Think about their food and habits.'}`;
+            }
+
+            setTimeout(() => {
+                quizIndex++;
+                if (quizIndex < quizQuestions.length) {
+                    renderQuizQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 2200);
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-body').classList.add('hidden');
+            document.getElementById('quiz-summary').classList.remove('hidden');
+            document.getElementById('quiz-final-score').innerText = `${currentLang === 'zh' ? '最終得分' : 'Final Score'}: ${quizScore} / ${quizQuestions.length * 10}`;
+        }
+
+        // --- 9. UI & LANGUAGE TOGGLE HELPERS ---
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateLanguageUI();
+            renderAnimalPool();
+            renderPlacedAnimals();
+            renderEncyclopedia();
+        }
+
+        function updateLanguageUI() {
+            document.getElementById('lang-text').innerText = currentLang === 'zh' ? 'English' : '繁體中文';
+            
+            // Toggle text attributes across document
+            document.querySelectorAll('[data-zh]').forEach(el => {
+                el.innerText = currentLang === 'zh' ? el.getAttribute('data-zh') : el.getAttribute('data-en');
+            });
+
+            document.getElementById('app-title').innerText = currentLang === 'zh' ? '香港生態棲息地探索記' : 'HK Eco-Habitat Explorer';
+            document.getElementById('app-subtitle').innerText = currentLang === 'zh' ? '小學常識科 (P1-P3) 生物與自然環境' : 'Primary Science (P1-P3) Living Things & Habitats';
+            document.getElementById('score-label').innerText = currentLang === 'zh' ? '星級得分' : 'Star Score';
+
+            document.getElementById('instruction-title').innerText = currentLang === 'zh' ? '幫助小動物尋找家園！' : 'Help Animals Find Their Homes!';
+            document.getElementById('instruction-desc').innerText = currentLang === 'zh' 
+                ? '從下方動物欄拖拽（或點擊選擇後點擊棲息地）把動物放回牠們正確的香港棲息地吧！' 
+                : 'Drag (or tap to select, then tap habitat) animals into their native Hong Kong homes!';
+        }
+
+        function updateScoreUI() {
+            document.getElementById('star-count').innerText = starScore;
+            const placedCount = Object.keys(placedAnimalsMap).length;
+            document.getElementById('badge-count').innerText = `${placedCount}/7`;
+        }
+
+        function switchTab(tabName) {
+            ['game', 'encyclopedia', 'quiz'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+                document.getElementById(`tab-${t}`).className = 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold bg-white/20 hover:bg-white/30 text-white transition-all flex items-center justify-center space-x-2';
+            });
+
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).className = 'flex-1 sm:flex-none px-4 py-2 rounded-xl text-sm font-bold bg-white text-emerald-800 shadow transition-all flex items-center justify-center space-x-2';
+        }
+
+        function resetGame() {
+            placedAnimalsMap = {};
+            activeSelectedAnimalId = null;
+            starScore = 0;
+            updateScoreUI();
+            renderAnimalPool();
+            renderPlacedAnimals();
+            renderEncyclopedia();
+        }
+
+        function toggleGithubGuide() {
+            const modal = document.getElementById('github-modal');
+            modal.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
